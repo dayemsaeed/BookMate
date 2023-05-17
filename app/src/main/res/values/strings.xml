@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Book Summary App</string>
+    <string name="title_activity_book_detail_view">BookDetailViewActivity</string>
+    <string name="title_activity_book_row">BookRow</string>
+</resources>
