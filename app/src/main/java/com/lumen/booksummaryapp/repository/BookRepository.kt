@@ -8,9 +8,10 @@ import java.io.IOException
 class BookRepository {
 
     private val bookService: BookService = RetrofitClient.booksService;
+    private val pageSize: Int = 10
 
-    suspend fun searchBooks(query: String): List<Book> {
-        val response = bookService.getBooks(query)
+    suspend fun searchBooks(query: String, startIndex: Int): List<Book> {
+        val response = bookService.getBooks(query, startIndex, pageSize)
         if (response.isSuccessful) {
             val books = response.body()?.items?.mapNotNull { item ->
                 val volumeInfo = item.volumeInfo
@@ -28,8 +29,8 @@ class BookRepository {
         }
     }
 
-    suspend fun getBestSellers() : List<Book> {
-        val response = bookService.getBestSellers()
+    suspend fun getBestSellers(startIndex: Int) : List<Book> {
+        val response = bookService.getBestSellers(startIndex, pageSize)
         if (response.isSuccessful) {
             val books = response.body()?.items?.mapNotNull { item ->
                 val volumeInfo = item.volumeInfo
