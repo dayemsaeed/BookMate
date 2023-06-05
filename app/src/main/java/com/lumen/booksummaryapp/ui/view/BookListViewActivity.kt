@@ -6,25 +6,27 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemContentType
+import androidx.paging.compose.itemKey
 import com.lumen.booksummaryapp.model.Book
 import com.lumen.booksummaryapp.ui.theme.BookSummaryAppTheme
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.Divider
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import com.lumen.booksummaryapp.viewmodel.BookListViewModel
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.remember
 
 class BookListViewActivity : ComponentActivity() {
     private val viewModel : BookListViewModel by viewModels()
@@ -33,13 +35,13 @@ class BookListViewActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         viewModel.getBestSellers()
         setContent {
+            val books = viewModel.flow.collectAsLazyPagingItems()
             BookSummaryAppTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    val books by viewModel.books.observeAsState(emptyList())
                     BookList(books = books)
                 }
             }
@@ -48,20 +50,52 @@ class BookListViewActivity : ComponentActivity() {
 }
 
 @Composable
-fun BookList(books: List<Book>) {
-    LazyColumn {
-        items(books) {book ->
-            BookRow(book, book.imageUrl)
-            Divider(
-                color = Color.Gray,
-                thickness = 1.dp,
-                startIndent = 16.dp,
-                modifier = Modifier.fillMaxWidth()
+fun BookList(books: LazyPagingItems<Book>, modifier: Modifier = Modifier) {
+    when (books.loadState.refresh) {
+        LoadState.Loading -> {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
             )
+        }
+        is LoadState.Error -> {
+            val message = books.loadState.refresh as LoadState.Error
+            Text(
+                text = message.error.localizedMessage ?: "Error loading books",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                color = Color.Red,
+                textAlign = TextAlign.Center
+            )
+        }
+        else -> {
+            LazyColumn(
+                state = rememberLazyListState(), modifier = Modifier
+            ) {
+                items(
+                    count = books.itemCount,
+                    key = books.itemKey<Book>(),
+                    contentType = books.itemContentType<Book>()
+                ) { index ->
+                    val book = books[index]
+                    book?.let {
+                        BookRow(book, book.imageUrl)
+                        Divider(
+                            color = Color.Gray,
+                            thickness = 1.dp,
+                            startIndent = 16.dp,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
         }
     }
 }
 
+/*
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun DefaultPreview() {
@@ -75,4 +109,4 @@ fun DefaultPreview() {
         )
         BookList(books)
     }
-}
+}*/

@@ -13,7 +13,7 @@ class BookRepository {
     suspend fun searchBooks(query: String, startIndex: Int): List<Book> {
         val response = bookService.getBooks(query, startIndex, pageSize)
         if (response.isSuccessful) {
-            val books = response.body()?.items?.mapNotNull { item ->
+            val books = response.body()?.items?.map { item ->
                 val volumeInfo = item.volumeInfo
                 val title = volumeInfo.title
                 val authors = volumeInfo.authors?.joinToString(", ")
@@ -32,7 +32,7 @@ class BookRepository {
     suspend fun getBestSellers(startIndex: Int) : List<Book> {
         val response = bookService.getBestSellers(startIndex, pageSize)
         if (response.isSuccessful) {
-            val books = response.body()?.items?.mapNotNull { item ->
+            val books = response.body()?.items?.map { item ->
                 val volumeInfo = item.volumeInfo
                 val title = volumeInfo.title
                 val authors = volumeInfo.authors?.joinToString(", ")
